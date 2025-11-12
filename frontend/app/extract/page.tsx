@@ -1,17 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { extractRecipe, saveRecipe } from '@/lib/api';
+import { extractRecipe } from '@/lib/api';
 import { ExtractedRecipe } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import RecipeDisplay from '@/components/RecipeDisplay';
 
 export default function ExtractPage() {
-  const router = useRouter();
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [recipe, setRecipe] = useState<ExtractedRecipe | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [extractedUrl, setExtractedUrl] = useState('');
 
   const handleExtract = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +21,7 @@ export default function ExtractPage() {
     try {
       const extracted = await extractRecipe(url);
       setRecipe(extracted);
+      setExtractedUrl(url);
     } catch (err: any) {
       setError(err.message || 'Failed to extract recipe');
     } finally {
@@ -29,18 +29,10 @@ export default function ExtractPage() {
     }
   };
 
-  const handleSave = async () => {
-    if (!recipe) return;
-
-    setSaving(true);
-    try {
-      await saveRecipe({ ...recipe, url });
-      router.push('/recipes');
-    } catch (err: any) {
-      setError('Failed to save recipe: ' + err.message);
-    } finally {
-      setSaving(false);
-    }
+  const handleReset = () => {
+    setRecipe(null);
+    setUrl('');
+    setExtractedUrl('');
   };
 
   return (
@@ -99,80 +91,12 @@ export default function ExtractPage() {
 
         {/* Extracted Recipe Display */}
         {recipe && !loading && (
-          <div className="bg-surface border border-border rounded-xl overflow-hidden">
-            {/* Recipe Header */}
-            <div className="border-b border-border p-6">
-              <h2 className="text-2xl font-bold text-text-primary mb-2">{recipe.title}</h2>
-              {recipe.description && (
-                <p className="text-text-secondary">{recipe.description}</p>
-              )}
-            </div>
-
-            <div className="p-6">
-              {/* Ingredients */}
-              <div className="mb-8">
-                <div className="flex items-center gap-2 mb-4">
-                  <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  <h3 className="text-lg font-semibold text-text-primary">Ingredients</h3>
-                  <span className="text-text-secondary text-sm">({recipe.ingredients.length})</span>
-                </div>
-                <ul className="space-y-2">
-                  {recipe.ingredients.map((ingredient, index) => (
-                    <li key={index} className="flex items-start gap-3 text-text-primary bg-background border border-border rounded-lg p-3">
-                      <span className="text-accent font-semibold min-w-[24px]">{index + 1}.</span>
-                      <span>{ingredient}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Method */}
-              <div className="mb-8">
-                <div className="flex items-center gap-2 mb-4">
-                  <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                  </svg>
-                  <h3 className="text-lg font-semibold text-text-primary">Method</h3>
-                  <span className="text-text-secondary text-sm">({recipe.method.length} steps)</span>
-                </div>
-                <ol className="space-y-3">
-                  {recipe.method.map((step, index) => (
-                    <li key={index} className="flex gap-4 bg-background border border-border rounded-lg p-4">
-                      <span className="flex-shrink-0 w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center font-semibold text-sm">
-                        {index + 1}
-                      </span>
-                      <p className="text-text-primary pt-1">{step}</p>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-3 pt-6 border-t border-border">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent hover:bg-accent-hover text-white rounded-lg font-semibold disabled:opacity-50 transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                  </svg>
-                  {saving ? 'Saving...' : 'Save to Collection'}
-                </button>
-                <button
-                  onClick={() => {
-                    setRecipe(null);
-                    setUrl('');
-                  }}
-                  className="px-6 py-3 bg-surface hover:bg-muted border border-border text-text-primary rounded-lg font-semibold transition-colors"
-                >
-                  Extract Another
-                </button>
-              </div>
-            </div>
-          </div>
+          <RecipeDisplay 
+            recipe={recipe} 
+            onReset={handleReset}
+            sourceType="extracted"
+            url={extractedUrl}
+          />
         )}
       </div>
     </div>

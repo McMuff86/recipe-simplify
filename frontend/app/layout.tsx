@@ -42,6 +42,12 @@ export default function RootLayout({
                   Extract
                 </Link>
                 <Link
+                  href="/ai-chef"
+                  className="text-text-secondary hover:text-text-primary text-sm font-medium transition-colors"
+                >
+                  AI Chef
+                </Link>
+                <Link
                   href="/recipes"
                   className="text-text-secondary hover:text-text-primary text-sm font-medium transition-colors"
                 >

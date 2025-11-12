@@ -1,15 +1,19 @@
 import { RecipeWithDetails } from '@/lib/supabase';
-import { deleteRecipe } from '@/lib/api';
+import { deleteRecipe, updateRecipeRating } from '@/lib/api';
 import { useState } from 'react';
+import StarRating from './StarRating';
 
 interface RecipeCardProps {
   recipe: RecipeWithDetails;
   onDelete: () => void;
+  onUpdate?: () => void;
 }
 
-export default function RecipeCard({ recipe, onDelete }: RecipeCardProps) {
+export default function RecipeCard({ recipe, onDelete, onUpdate }: RecipeCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [rating, setRating] = useState(recipe.rating || null);
+  const [updatingRating, setUpdatingRating] = useState(false);
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this recipe?')) return;
@@ -25,6 +29,20 @@ export default function RecipeCard({ recipe, onDelete }: RecipeCardProps) {
     }
   };
 
+  const handleRatingChange = async (newRating: number) => {
+    setRating(newRating);
+    setUpdatingRating(true);
+    try {
+      await updateRecipeRating(recipe.id, newRating);
+      if (onUpdate) onUpdate();
+    } catch (err) {
+      alert('Failed to update rating');
+      setRating(recipe.rating || null); // Revert on error
+    } finally {
+      setUpdatingRating(false);
+    }
+  };
+
   const ingredientsCount = recipe.ingredients?.length || 0;
   const stepsCount = recipe.method_steps?.length || 0;
 
@@ -32,12 +50,38 @@ export default function RecipeCard({ recipe, onDelete }: RecipeCardProps) {
     <div className="bg-surface border border-border rounded-xl overflow-hidden hover:border-accent/50 transition-all">
       {/* Card Header */}
       <div className="p-6 border-b border-border">
-        <h3 className="text-xl font-semibold text-text-primary mb-2 line-clamp-2">
-          {recipe.title}
-        </h3>
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <h3 className="text-xl font-semibold text-text-primary line-clamp-2 flex-1">
+            {recipe.title}
+          </h3>
+          {recipe.source_type === 'generated' && (
+            <span className="flex-shrink-0 inline-flex items-center gap-1 bg-accent/10 border border-accent/20 text-accent px-2 py-0.5 rounded text-xs font-medium">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              AI
+            </span>
+          )}
+        </div>
         {recipe.description && (
-          <p className="text-text-secondary text-sm line-clamp-2">{recipe.description}</p>
+          <p className="text-text-secondary text-sm line-clamp-2 mb-3">{recipe.description}</p>
         )}
+        {/* Rating */}
+        <div className="flex items-center gap-3">
+          <StarRating 
+            value={rating} 
+            onChange={handleRatingChange}
+            size="sm"
+          />
+          {rating && (
+            <span className="text-xs text-text-secondary">
+              {rating === 5 ? 'Amazing!' : rating === 4 ? 'Great!' : rating === 3 ? 'Good' : rating === 2 ? 'Okay' : 'Meh'}
+            </span>
+          )}
+          {updatingRating && (
+            <span className="text-xs text-text-secondary">Saving...</span>
+          )}
+        </div>
       </div>
 
       {/* Card Body */}

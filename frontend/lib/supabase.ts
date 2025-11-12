@@ -14,6 +14,8 @@ export interface Recipe {
   created_at: string;
   updated_at: string;
   user_id: string | null;
+  rating: number | null;
+  source_type: 'extracted' | 'generated';
 }
 
 export interface Ingredient {

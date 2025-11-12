@@ -31,7 +31,17 @@ Extracts recipe information from website URLs using OpenAI's API.
 - CORS-enabled for web access
 - Error handling and validation
 
-**Documentation:** [README-EdgeFunction.md](README-EdgeFunction.md)
+#### `generate-recipe`
+Generates recipes from available ingredients using AI.
+
+**Location:** `supabase/functions/generate-recipe/index.ts`
+
+**Features:**
+- Takes list of ingredients as input
+- Optional preferences (cuisine style, dietary restrictions, etc.)
+- Uses OpenAI GPT-4o-mini to create complete recipes
+- Returns structured JSON with title, description, ingredients, and method
+- CORS-enabled for web access
 
 ### Project Files
 
@@ -39,21 +49,38 @@ Extracts recipe information from website URLs using OpenAI's API.
 recipe-simple/
 ├── .github/
 │   └── workflows/
-│       └── deploy-edge-function.yml    # GitHub Actions CI/CD workflow
+│       └── deploy-edge-function.yml       # GitHub Actions CI/CD workflow
 ├── supabase/
-│   └── functions/
-│       └── extract-recipe/
-│           └── index.ts                # Main edge function implementation
-├── Agents.md                           # This file - Project overview
-├── CONFIG.md                           # Configuration guide
-├── DEPLOYMENT-GUIDE.md                 # Complete deployment instructions
-├── README.md                           # Main project README
-├── README-EdgeFunction.md              # Edge function technical docs
-├── deploy-edge-function.ps1           # PowerShell deployment script
-├── test-edge-function.js              # Node.js test script
-├── test-page.html                     # Interactive browser test page
-├── package.json                       # Node.js project configuration
-└── .gitignore                         # Git ignore rules
+│   ├── functions/
+│   │   ├── extract-recipe/
+│   │   │   └── index.ts                   # Recipe extraction edge function
+│   │   └── generate-recipe/
+│   │       └── index.ts                   # AI recipe generation edge function
+│   └── migrations/
+│       ├── create_recipes_schema.sql      # Initial database schema
+│       └── add_recipe_rating_and_source.sql # Rating & source type migration
+├── frontend/                              # Next.js frontend application
+│   ├── app/
+│   │   ├── layout.tsx                     # Root layout with navigation
+│   │   ├── page.tsx                       # Homepage
+│   │   ├── extract/
+│   │   │   └── page.tsx                   # Recipe extraction page
+│   │   ├── ai-chef/
+│   │   │   └── page.tsx                   # AI recipe generator page
+│   │   └── recipes/
+│   │       └── page.tsx                   # Recipe collection page
+│   ├── components/
+│   │   ├── RecipeCard.tsx                 # Recipe display card
+│   │   ├── RecipeDisplay.tsx              # Full recipe display with rating
+│   │   └── StarRating.tsx                 # Star rating component
+│   ├── lib/
+│   │   ├── supabase.ts                    # Supabase client & types
+│   │   └── api.ts                         # API functions
+│   └── globals.css                        # Global styles & design system
+├── Agents.md                              # This file - Project overview
+├── README.md                              # Main project README
+├── package.json                           # Node.js project configuration
+└── .gitignore                             # Git ignore rules
 ```
 
 ## Deployment
@@ -171,7 +198,7 @@ supabase secrets set OPENAI_API_KEY=your_key_here
 - [OpenAI API Documentation](https://platform.openai.com/docs)
 - [Deno Documentation](https://deno.land/manual)
 
-## Next Steps
+## Completed Features
 
 1. ✅ Create Supabase project
 2. ✅ Create extract-recipe edge function
@@ -180,12 +207,24 @@ supabase secrets set OPENAI_API_KEY=your_key_here
 5. ✅ Test edge function (Buffalo Hot Wings Sauce ✓)
 6. ✅ Create database schema for storing recipes
 7. ✅ Test database with sample recipe
-8. 🔲 Build frontend application
-9. 🔲 Implement user authentication
-10. 🔲 Add recipe management features (CRUD operations)
-11. 🔲 Add recipe search and filtering
-12. 🔲 Implement recipe categories/tags
-13. 🔲 Add user favorites/bookmarks
+8. ✅ Build frontend application with Next.js
+9. ✅ Create modern GitHub-inspired design system
+10. ✅ Recipe extraction from URLs
+11. ✅ AI recipe generation from ingredients (AI Chef)
+12. ✅ Recipe rating system (1-5 stars)
+13. ✅ Recipe collection with search & filtering
+14. ✅ Sort by date or rating
+15. ✅ Full CRUD operations for recipes
+
+## Future Enhancements
+
+1. 🔲 Implement user authentication
+2. 🔲 User-specific recipe collections
+3. 🔲 Recipe categories/tags
+4. 🔲 Favorites/bookmarks
+5. 🔲 Recipe sharing
+6. 🔲 Meal planning
+7. 🔲 Shopping list generation
 
 ## Notes
 

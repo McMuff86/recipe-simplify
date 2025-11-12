@@ -12,6 +12,7 @@ export default function RecipesPage() {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchIn, setSearchIn] = useState<'all' | 'title' | 'ingredients'>('all');
+  const [sortBy, setSortBy] = useState<'date' | 'rating'>('date');
 
   useEffect(() => {
     loadRecipes();
@@ -28,33 +29,46 @@ export default function RecipesPage() {
     }
   };
 
-  // Filter recipes based on search query
-  const filteredRecipes = recipes.filter((recipe) => {
-    if (!searchQuery.trim()) return true;
+  // Filter and sort recipes
+  const filteredRecipes = recipes
+    .filter((recipe) => {
+      if (!searchQuery.trim()) return true;
 
-    const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase();
 
-    switch (searchIn) {
-      case 'title':
-        return recipe.title.toLowerCase().includes(query);
-      
-      case 'ingredients':
-        return recipe.ingredients?.some(ing => 
-          ing.text.toLowerCase().includes(query)
-        ) || false;
-      
-      case 'all':
-      default:
-        // Search in title, description, and ingredients
-        const titleMatch = recipe.title.toLowerCase().includes(query);
-        const descMatch = recipe.description?.toLowerCase().includes(query) || false;
-        const ingredientMatch = recipe.ingredients?.some(ing => 
-          ing.text.toLowerCase().includes(query)
-        ) || false;
+      switch (searchIn) {
+        case 'title':
+          return recipe.title.toLowerCase().includes(query);
         
-        return titleMatch || descMatch || ingredientMatch;
-    }
-  });
+        case 'ingredients':
+          return recipe.ingredients?.some(ing => 
+            ing.text.toLowerCase().includes(query)
+          ) || false;
+        
+        case 'all':
+        default:
+          // Search in title, description, and ingredients
+          const titleMatch = recipe.title.toLowerCase().includes(query);
+          const descMatch = recipe.description?.toLowerCase().includes(query) || false;
+          const ingredientMatch = recipe.ingredients?.some(ing => 
+            ing.text.toLowerCase().includes(query)
+          ) || false;
+          
+          return titleMatch || descMatch || ingredientMatch;
+      }
+    })
+    .sort((a, b) => {
+      if (sortBy === 'rating') {
+        // Sort by rating (highest first), then by date
+        const ratingA = a.rating || 0;
+        const ratingB = b.rating || 0;
+        if (ratingA !== ratingB) {
+          return ratingB - ratingA;
+        }
+      }
+      // Default: sort by date (newest first)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
 
   if (loading) {
     return (
@@ -109,10 +123,10 @@ export default function RecipesPage() {
           </Link>
         </div>
 
-        {/* Search Bar */}
+        {/* Search and Filters */}
         {recipes.length > 0 && (
           <div className="bg-surface border border-border rounded-xl p-4 mb-8">
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col md:flex-row gap-4 mb-4">
               {/* Search Input */}
               <div className="flex-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -172,6 +186,31 @@ export default function RecipesPage() {
                   Ingredients
                 </button>
               </div>
+            </div>
+
+            {/* Sort Options */}
+            <div className="flex items-center gap-3 pt-4 border-t border-border">
+              <span className="text-sm text-text-secondary font-medium">Sort by:</span>
+              <button
+                onClick={() => setSortBy('date')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  sortBy === 'date'
+                    ? 'bg-accent text-white'
+                    : 'bg-background border border-border text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Newest
+              </button>
+              <button
+                onClick={() => setSortBy('rating')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  sortBy === 'rating'
+                    ? 'bg-accent text-white'
+                    : 'bg-background border border-border text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                ⭐ Rating
+              </button>
             </div>
 
             {/* Search Results Info */}
@@ -239,7 +278,7 @@ export default function RecipesPage() {
           // Recipe Grid
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRecipes.map((recipe) => (
-              <RecipeCard key={recipe.id} recipe={recipe} onDelete={loadRecipes} />
+              <RecipeCard key={recipe.id} recipe={recipe} onDelete={loadRecipes} onUpdate={loadRecipes} />
             ))}
           </div>
         )}

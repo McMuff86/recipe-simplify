@@ -1,6 +1,7 @@
 import { supabase, ExtractedRecipe, RecipeWithDetails } from './supabase';
 
 const EXTRACT_FUNCTION_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/extract-recipe`;
+const GENERATE_FUNCTION_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/generate-recipe`;
 
 /**
  * Extract recipe from URL using the Supabase Edge Function
@@ -24,16 +25,43 @@ export async function extractRecipe(url: string): Promise<ExtractedRecipe> {
 }
 
 /**
+ * Generate recipe from ingredients using AI
+ */
+export async function generateRecipe(ingredients: string[], preferences?: string): Promise<ExtractedRecipe> {
+  const response = await fetch(GENERATE_FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ ingredients, preferences }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to generate recipe');
+  }
+
+  return response.json();
+}
+
+/**
  * Save extracted recipe to database
  */
-export async function saveRecipe(recipeData: ExtractedRecipe & { url: string }): Promise<string> {
+export async function saveRecipe(
+  recipeData: ExtractedRecipe & { url?: string }, 
+  rating?: number,
+  sourceType: 'extracted' | 'generated' = 'extracted'
+): Promise<string> {
   // 1. Insert recipe
   const { data: recipe, error: recipeError } = await supabase
     .from('recipes')
     .insert({
       title: recipeData.title,
       description: recipeData.description,
-      source_url: recipeData.url,
+      source_url: recipeData.url || null,
+      rating: rating || null,
+      source_type: sourceType,
     })
     .select()
     .single();
@@ -74,6 +102,18 @@ export async function saveRecipe(recipeData: ExtractedRecipe & { url: string }):
 }
 
 /**
+ * Update recipe rating
+ */
+export async function updateRecipeRating(recipeId: string, rating: number): Promise<void> {
+  const { error } = await supabase
+    .from('recipes')
+    .update({ rating })
+    .eq('id', recipeId);
+
+  if (error) throw error;
+}
+
+/**
  * Get all recipes
  */
 export async function getAllRecipes(): Promise<RecipeWithDetails[]> {
@@ -111,4 +151,3 @@ export async function deleteRecipe(id: string): Promise<void> {
 
   if (error) throw error;
 }
-
