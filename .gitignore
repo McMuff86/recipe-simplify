@@ -12,8 +12,9 @@ yarn-error.log*
 # Supabase
 .supabase/
 
-# IDE
+# IDE & MCP Config (contains tokens!)
 .vscode/
+.cursor/
 .idea/
 *.swp
 *.swo

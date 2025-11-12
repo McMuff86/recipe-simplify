@@ -38,44 +38,43 @@ Recipe Simplify extracts structured recipe information from any recipe website U
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
-   cd recipe-simple
+   git clone https://github.com/McMuff86/recipe-simplify.git
+   cd recipe-simplify
    ```
 
-2. **Install Supabase CLI**
+2. **Backend Setup (Already Done! ✅)**
    
-   Windows (PowerShell as Administrator):
-   ```powershell
-   Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-   irm get.scoop.sh | iex
-   scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-   scoop install supabase
-   ```
+   The backend is already deployed and working:
+   - ✅ Supabase project created
+   - ✅ Edge function deployed
+   - ✅ Database schema applied
+   - ✅ OpenAI API configured
 
-   macOS:
+3. **Frontend Setup**
+   
    ```bash
-   brew install supabase/tap/supabase
+   cd frontend
+   npm install
    ```
 
-3. **Login and link project**
+4. **Environment Variables**
+   
+   The `.env.local` file is already created with correct values!
+
+5. **Start Development Server**
+   
    ```bash
-   supabase login
-   supabase link --project-ref lpxagwasrquoiknmkccw
+   npm run dev
    ```
+   
+   Open [http://localhost:3000](http://localhost:3000)
 
-4. **Set OpenAI API key**
+6. **Or use root commands**
+   
    ```bash
-   supabase secrets set OPENAI_API_KEY=sk-your-key-here
-   ```
-
-5. **Deploy the edge function**
-   ```bash
-   supabase functions deploy extract-recipe
-   ```
-
-   Or use the automated script:
-   ```powershell
-   .\deploy-edge-function.ps1
+   # From project root
+   npm run dev    # Start frontend
+   npm test       # Test edge function
    ```
 
 ## Usage
