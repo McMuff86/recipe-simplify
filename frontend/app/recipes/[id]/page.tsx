@@ -20,6 +20,7 @@ export default function RecipeDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [rating, setRating] = useState<number | null>(null);
   const [updatingRating, setUpdatingRating] = useState(false);
+  const [imageSuccess, setImageSuccess] = useState(false);
 
   useEffect(() => {
     loadRecipe();
@@ -66,10 +67,16 @@ export default function RecipeDetailPage() {
     }
   };
 
-  const handleImageUploaded = (imageUrl: string) => {
+  const handleImageUploaded = async (imageUrl: string) => {
     if (recipe) {
       setRecipe({ ...recipe, image_url: imageUrl });
     }
+    // Show success message
+    setImageSuccess(true);
+    setTimeout(() => setImageSuccess(false), 3000);
+    
+    // Reload recipe to ensure we have the latest data
+    await loadRecipe();
   };
 
   if (loading) {
@@ -107,9 +114,10 @@ export default function RecipeDetailPage() {
     <div className="min-h-screen bg-background py-12">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <Link
             href="/recipes"
+            onClick={() => window.location.href = '/recipes'} // Force full page reload
             className="inline-flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,7 +128,7 @@ export default function RecipeDetailPage() {
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-error/10 hover:bg-error/20 border border-error/20 text-error rounded-lg transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-error/10 hover:bg-error/20 border border-error/20 text-error rounded-lg transition-colors disabled:opacity-50 text-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -133,11 +141,22 @@ export default function RecipeDetailPage() {
         <div className="bg-surface border border-border rounded-xl overflow-hidden">
           {/* Image Section */}
           <div className="p-6 border-b border-border">
+            {imageSuccess && (
+              <div className="mb-4 p-3 bg-accent/10 border border-accent/20 rounded-lg text-accent text-sm flex items-center gap-2">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Image saved successfully!</span>
+              </div>
+            )}
             <ImageUpload
               recipeId={recipeId}
               currentImageUrl={recipe.image_url}
               onImageUploaded={handleImageUploaded}
             />
+            <p className="mt-2 text-xs text-text-secondary">
+              💡 Your image is saved automatically when uploaded
+            </p>
           </div>
 
           {/* Title & Badges */}

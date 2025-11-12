@@ -16,6 +16,16 @@ export default function RecipesPage() {
 
   useEffect(() => {
     loadRecipes();
+    
+    // Reload recipes when page becomes visible (e.g., when navigating back)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadRecipes();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const loadRecipes = async () => {
