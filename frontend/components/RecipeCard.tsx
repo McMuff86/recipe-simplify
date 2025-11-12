@@ -2,6 +2,7 @@ import { RecipeWithDetails } from '@/lib/supabase';
 import { deleteRecipe, updateRecipeRating } from '@/lib/api';
 import { useState } from 'react';
 import StarRating from './StarRating';
+import Link from 'next/link';
 
 interface RecipeCardProps {
   recipe: RecipeWithDetails;
@@ -128,27 +129,33 @@ export default function RecipeCard({ recipe, onDelete, onUpdate }: RecipeCardPro
           </a>
         )}
 
-        {/* Expand/Collapse Button */}
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-background hover:bg-muted border border-border rounded-lg text-text-primary text-sm font-medium transition-colors"
-        >
-          {expanded ? (
-            <>
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Link
+            href={`/recipes/${recipe.id}`}
+            className="flex-1 flex items-center justify-center gap-2 py-2 px-4 bg-accent hover:bg-accent-hover text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            <span>View & Edit</span>
+          </Link>
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="px-4 py-2 bg-background hover:bg-muted border border-border rounded-lg text-text-primary text-sm font-medium transition-colors"
+          >
+            {expanded ? (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
               </svg>
-              <span>Hide Details</span>
-            </>
-          ) : (
-            <>
+            ) : (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-              <span>Show Details</span>
-            </>
-          )}
-        </button>
+            )}
+          </button>
+        </div>
 
         {/* Expanded Details */}
         {expanded && (
@@ -187,17 +194,6 @@ export default function RecipeCard({ recipe, onDelete, onUpdate }: RecipeCardPro
           </div>
         )}
 
-        {/* Delete Button */}
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="w-full mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 bg-error/10 hover:bg-error/20 border border-error/20 text-error rounded-lg transition-colors disabled:opacity-50 text-sm font-medium"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-          {deleting ? 'Deleting...' : 'Delete Recipe'}
-        </button>
       </div>
 
       {/* Card Footer */}
