@@ -5,6 +5,7 @@ import { getAllRecipes } from '@/lib/api';
 import { RecipeWithDetails } from '@/lib/supabase';
 import RecipeCard from '@/components/RecipeCard';
 import Link from 'next/link';
+import { checkLegacyRecipes, claimLegacyRecipes } from '@/lib/migrate-recipes';
 
 export default function RecipesPage() {
   const [recipes, setRecipes] = useState<RecipeWithDetails[]>([]);
@@ -13,9 +14,12 @@ export default function RecipesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchIn, setSearchIn] = useState<'all' | 'title' | 'ingredients'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'rating'>('date');
+  const [showMigrationBanner, setShowMigrationBanner] = useState(false);
+  const [migrating, setMigrating] = useState(false);
 
   useEffect(() => {
     loadRecipes();
+    checkForLegacyRecipes();
     
     // Reload recipes when page becomes visible (e.g., when navigating back)
     const handleVisibilityChange = () => {
@@ -27,6 +31,29 @@ export default function RecipesPage() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
+
+  const checkForLegacyRecipes = async () => {
+    // Check if there are any legacy recipes that need migration
+    const count = await checkLegacyRecipes();
+    if (count > 0) {
+      setShowMigrationBanner(true);
+    }
+  };
+
+  const handleMigration = async () => {
+    setMigrating(true);
+    const result = await claimLegacyRecipes();
+    
+    if (result.error) {
+      alert('Failed to migrate recipes: ' + result.error);
+    } else if (result.count > 0) {
+      alert(`Successfully migrated ${result.count} recipe(s) to your account!`);
+      setShowMigrationBanner(false);
+      await loadRecipes(); // Reload to show updated recipes
+    }
+    
+    setMigrating(false);
+  };
 
   const loadRecipes = async () => {
     try {
@@ -114,6 +141,41 @@ export default function RecipesPage() {
   return (
     <div className="min-h-screen bg-background py-12">
       <div className="container mx-auto px-4 max-w-6xl">
+        {/* Migration Banner */}
+        {showMigrationBanner && (
+          <div className="mb-6 p-4 bg-accent/10 border border-accent/20 rounded-xl">
+            <div className="flex items-start gap-3">
+              <svg className="w-6 h-6 text-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-text-primary mb-1">
+                  Legacy Recipes Found
+                </h3>
+                <p className="text-sm text-text-secondary mb-3">
+                  We found recipes created before user authentication was enabled. 
+                  Click below to assign them to your account so you can edit them.
+                </p>
+                <button
+                  onClick={handleMigration}
+                  disabled={migrating}
+                  className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {migrating ? 'Migrating...' : 'Claim My Recipes'}
+                </button>
+              </div>
+              <button
+                onClick={() => setShowMigrationBanner(false)}
+                className="text-text-secondary hover:text-text-primary"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
