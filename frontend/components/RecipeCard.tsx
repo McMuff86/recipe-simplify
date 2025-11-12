@@ -160,6 +160,17 @@ export default function RecipeCard({ recipe, onDelete, onUpdate }: RecipeCardPro
         {/* Expanded Details */}
         {expanded && (
           <div className="mt-4 pt-4 border-t border-border space-y-4">
+            {/* Recipe Image in Expanded View */}
+            {recipe.image_url && (
+              <div className="mb-4">
+                <img
+                  src={recipe.image_url}
+                  alt={recipe.title}
+                  className="w-full h-64 object-cover rounded-lg border border-border"
+                />
+              </div>
+            )}
+
             {/* Ingredients */}
             {recipe.ingredients && recipe.ingredients.length > 0 && (
               <div>
