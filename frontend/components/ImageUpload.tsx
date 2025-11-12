@@ -46,12 +46,20 @@ export default function ImageUpload({ recipeId, currentImageUrl, onImageUploaded
     if (recipeId) {
       setUploading(true);
       try {
+        console.log('Starting image upload for recipe:', recipeId);
         const url = await uploadRecipeImage(file, recipeId);
+        console.log('Image uploaded to storage, URL:', url);
+        
         setImageUrl(url);
+        
+        console.log('Updating recipe with image URL...');
         await updateRecipeImage(recipeId, url);
+        console.log('Recipe updated successfully!');
+        
         if (onImageUploaded) onImageUploaded(url);
         setPreviewUrl(null);
       } catch (err: any) {
+        console.error('Image upload error:', err);
         setError(err.message || 'Failed to upload image');
       } finally {
         setUploading(false);

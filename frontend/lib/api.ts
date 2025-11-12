@@ -177,12 +177,21 @@ export async function updateRecipeRating(recipeId: string, rating: number): Prom
  */
 export async function updateRecipeImage(recipeId: string, imageUrl: string): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase
+  
+  console.log('updateRecipeImage called with:', { recipeId, imageUrl });
+  
+  const { data, error } = await supabase
     .from('recipes')
     .update({ image_url: imageUrl })
-    .eq('id', recipeId);
+    .eq('id', recipeId)
+    .select();
 
-  if (error) throw error;
+  console.log('Update result:', { data, error });
+
+  if (error) {
+    console.error('Update error:', error);
+    throw error;
+  }
 }
 
 /**
