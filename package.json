@@ -1,0 +1,30 @@
+{
+  "name": "recipe-simplify",
+  "version": "1.0.0",
+  "description": "Recipe extraction and management system using Supabase and OpenAI",
+  "main": "index.js",
+  "scripts": {
+    "test": "node tests/test-edge-function.js",
+    "test:hotwings": "node tests/test-hotwings.js",
+    "deploy": "powershell -ExecutionPolicy Bypass -File scripts/deploy-edge-function.ps1",
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build"
+  },
+  "keywords": [
+    "recipe",
+    "supabase",
+    "openai",
+    "extraction",
+    "edge-functions"
+  ],
+  "author": "McMuff86",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/McMuff86/recipe-simplify"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+
