@@ -10,6 +10,8 @@ export default function RecipesPage() {
   const [recipes, setRecipes] = useState<RecipeWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchIn, setSearchIn] = useState<'all' | 'title' | 'ingredients'>('all');
 
   useEffect(() => {
     loadRecipes();
@@ -25,6 +27,34 @@ export default function RecipesPage() {
       setLoading(false);
     }
   };
+
+  // Filter recipes based on search query
+  const filteredRecipes = recipes.filter((recipe) => {
+    if (!searchQuery.trim()) return true;
+
+    const query = searchQuery.toLowerCase();
+
+    switch (searchIn) {
+      case 'title':
+        return recipe.title.toLowerCase().includes(query);
+      
+      case 'ingredients':
+        return recipe.ingredients?.some(ing => 
+          ing.text.toLowerCase().includes(query)
+        ) || false;
+      
+      case 'all':
+      default:
+        // Search in title, description, and ingredients
+        const titleMatch = recipe.title.toLowerCase().includes(query);
+        const descMatch = recipe.description?.toLowerCase().includes(query) || false;
+        const ingredientMatch = recipe.ingredients?.some(ing => 
+          ing.text.toLowerCase().includes(query)
+        ) || false;
+        
+        return titleMatch || descMatch || ingredientMatch;
+    }
+  });
 
   if (loading) {
     return (
@@ -79,6 +109,91 @@ export default function RecipesPage() {
           </Link>
         </div>
 
+        {/* Search Bar */}
+        {recipes.length > 0 && (
+          <div className="bg-surface border border-border rounded-xl p-4 mb-8">
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Search Input */}
+              <div className="flex-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search recipes..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-lg text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-secondary hover:text-text-primary"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Filter Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSearchIn('all')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                    searchIn === 'all'
+                      ? 'bg-accent text-white'
+                      : 'bg-background border border-border text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setSearchIn('title')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                    searchIn === 'title'
+                      ? 'bg-accent text-white'
+                      : 'bg-background border border-border text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  Title
+                </button>
+                <button
+                  onClick={() => setSearchIn('ingredients')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                    searchIn === 'ingredients'
+                      ? 'bg-accent text-white'
+                      : 'bg-background border border-border text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  Ingredients
+                </button>
+              </div>
+            </div>
+
+            {/* Search Results Info */}
+            {searchQuery && (
+              <div className="mt-3 flex items-center justify-between text-sm">
+                <p className="text-text-secondary">
+                  Found {filteredRecipes.length} {filteredRecipes.length === 1 ? 'recipe' : 'recipes'} 
+                  {searchIn !== 'all' && ` in ${searchIn}`}
+                </p>
+                {filteredRecipes.length > 0 && filteredRecipes.length < recipes.length && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="text-accent hover:text-accent-hover font-medium"
+                  >
+                    Clear search
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Recipe Grid */}
         {recipes.length === 0 ? (
           <div className="bg-surface border border-border rounded-xl p-12 text-center">
@@ -101,9 +216,29 @@ export default function RecipesPage() {
               Extract Your First Recipe
             </Link>
           </div>
+        ) : filteredRecipes.length === 0 ? (
+          // No search results
+          <div className="bg-surface border border-border rounded-xl p-12 text-center">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-text-primary mb-2">No recipes found</h2>
+            <p className="text-text-secondary mb-4">
+              Try searching with different keywords or filters
+            </p>
+            <button
+              onClick={() => setSearchQuery('')}
+              className="text-accent hover:text-accent-hover font-medium"
+            >
+              Clear search
+            </button>
+          </div>
         ) : (
+          // Recipe Grid
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recipes.map((recipe) => (
+            {filteredRecipes.map((recipe) => (
               <RecipeCard key={recipe.id} recipe={recipe} onDelete={loadRecipes} />
             ))}
           </div>
