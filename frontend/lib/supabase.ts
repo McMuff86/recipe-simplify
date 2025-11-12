@@ -1,9 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Note: For client components, import from supabase-browser.ts
+// This file only exports types
 
 // Types for our database
 export interface Recipe {
@@ -45,6 +41,7 @@ export interface RecipeWithDetails extends Recipe {
     step_number: number;
     description: string;
   }> | null;
+  image_url?: string | null;
 }
 
 export interface ExtractedRecipe {

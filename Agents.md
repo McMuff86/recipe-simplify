@@ -215,16 +215,22 @@ supabase secrets set OPENAI_API_KEY=your_key_here
 13. ✅ Recipe collection with search & filtering
 14. ✅ Sort by date or rating
 15. ✅ Full CRUD operations for recipes
+16. ✅ **User Authentication** (Email/Password)
+17. ✅ **Row Level Security (RLS)** - Users see only their recipes
+18. ✅ **Storage Integration** - Recipe image uploads
+19. ✅ Protected routes with middleware
+20. ✅ User profile menu with sign out
 
 ## Future Enhancements
 
-1. 🔲 Implement user authentication
-2. 🔲 User-specific recipe collections
-3. 🔲 Recipe categories/tags
-4. 🔲 Favorites/bookmarks
-5. 🔲 Recipe sharing
-6. 🔲 Meal planning
-7. 🔲 Shopping list generation
+1. 🔲 Google OAuth authentication
+2. 🔲 Recipe categories/tags
+3. 🔲 Favorites/bookmarks
+4. 🔲 Recipe sharing (public/private)
+5. 🔲 Meal planning
+6. 🔲 Shopping list generation
+7. 🔲 Recipe import/export (PDF)
+8. 🔲 Nutrition information
 
 ## Notes
 

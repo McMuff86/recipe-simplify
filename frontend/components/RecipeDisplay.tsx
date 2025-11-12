@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { ExtractedRecipe } from '@/lib/supabase';
-import { saveRecipe } from '@/lib/api';
+import { saveRecipe, uploadRecipeImage } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import StarRating from './StarRating';
+import ImageUpload from './ImageUpload';
 
 interface RecipeDisplayProps {
   recipe: ExtractedRecipe;
@@ -18,15 +19,23 @@ export default function RecipeDisplay({ recipe, onReset, sourceType, url }: Reci
   const [saving, setSaving] = useState(false);
   const [rating, setRating] = useState<number | null>(null);
   const [showRating, setShowRating] = useState(sourceType === 'generated');
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await saveRecipe(
+      // First save the recipe
+      const recipeId = await saveRecipe(
         { ...recipe, url }, 
         rating || undefined,
         sourceType
       );
+      
+      // Upload image if selected
+      if (selectedImage) {
+        await uploadRecipeImage(selectedImage, recipeId);
+      }
+      
       router.push('/recipes');
     } catch (err: any) {
       alert('Failed to save recipe: ' + err.message);
@@ -98,6 +107,11 @@ export default function RecipeDisplay({ recipe, onReset, sourceType, url }: Reci
               </li>
             ))}
           </ol>
+        </div>
+
+        {/* Image Upload */}
+        <div className="mb-8">
+          <ImageUpload onImageChange={setSelectedImage} />
         </div>
 
         {/* Rating (for generated recipes) */}

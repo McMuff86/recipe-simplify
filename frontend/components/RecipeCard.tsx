@@ -48,6 +48,17 @@ export default function RecipeCard({ recipe, onDelete, onUpdate }: RecipeCardPro
 
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden hover:border-accent/50 transition-all">
+      {/* Recipe Image */}
+      {recipe.image_url && (
+        <div className="w-full h-48 overflow-hidden">
+          <img
+            src={recipe.image_url}
+            alt={recipe.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+      
       {/* Card Header */}
       <div className="p-6 border-b border-border">
         <div className="flex items-start justify-between gap-3 mb-2">

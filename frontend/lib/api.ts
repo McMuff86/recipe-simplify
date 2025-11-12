@@ -1,4 +1,5 @@
-import { supabase, ExtractedRecipe, RecipeWithDetails } from './supabase';
+import { ExtractedRecipe, RecipeWithDetails } from './supabase';
+import { createClient } from './supabase-browser';
 
 const EXTRACT_FUNCTION_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/extract-recipe`;
 const GENERATE_FUNCTION_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/generate-recipe`;
@@ -49,10 +50,16 @@ export async function generateRecipe(ingredients: string[], preferences?: string
  * Save extracted recipe to database
  */
 export async function saveRecipe(
-  recipeData: ExtractedRecipe & { url?: string }, 
+  recipeData: ExtractedRecipe & { url?: string; imageUrl?: string }, 
   rating?: number,
   sourceType: 'extracted' | 'generated' = 'extracted'
 ): Promise<string> {
+  const supabase = createClient();
+  
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
   // 1. Insert recipe
   const { data: recipe, error: recipeError } = await supabase
     .from('recipes')
@@ -62,6 +69,8 @@ export async function saveRecipe(
       source_url: recipeData.url || null,
       rating: rating || null,
       source_type: sourceType,
+      user_id: user.id,
+      image_url: recipeData.imageUrl || null,
     })
     .select()
     .single();
@@ -102,9 +111,59 @@ export async function saveRecipe(
 }
 
 /**
+ * Upload recipe image to storage
+ */
+export async function uploadRecipeImage(file: File, recipeId: string): Promise<string> {
+  const supabase = createClient();
+  
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  // Create unique file path: userId/recipeId/filename
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${user.id}/${recipeId}/${Date.now()}.${fileExt}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('recipe-images')
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+
+  if (uploadError) throw uploadError;
+
+  // Get public URL
+  const { data } = supabase.storage
+    .from('recipe-images')
+    .getPublicUrl(fileName);
+
+  return data.publicUrl;
+}
+
+/**
+ * Delete recipe image from storage
+ */
+export async function deleteRecipeImage(imageUrl: string): Promise<void> {
+  const supabase = createClient();
+  
+  // Extract file path from URL
+  const url = new URL(imageUrl);
+  const pathParts = url.pathname.split('/');
+  const filePath = pathParts.slice(pathParts.indexOf('recipe-images') + 1).join('/');
+
+  const { error } = await supabase.storage
+    .from('recipe-images')
+    .remove([filePath]);
+
+  if (error) throw error;
+}
+
+/**
  * Update recipe rating
  */
 export async function updateRecipeRating(recipeId: string, rating: number): Promise<void> {
+  const supabase = createClient();
   const { error } = await supabase
     .from('recipes')
     .update({ rating })
@@ -114,9 +173,23 @@ export async function updateRecipeRating(recipeId: string, rating: number): Prom
 }
 
 /**
- * Get all recipes
+ * Update recipe image
+ */
+export async function updateRecipeImage(recipeId: string, imageUrl: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('recipes')
+    .update({ image_url: imageUrl })
+    .eq('id', recipeId);
+
+  if (error) throw error;
+}
+
+/**
+ * Get all recipes for current user
  */
 export async function getAllRecipes(): Promise<RecipeWithDetails[]> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('recipes_with_details')
     .select('*')
@@ -130,6 +203,7 @@ export async function getAllRecipes(): Promise<RecipeWithDetails[]> {
  * Get single recipe by ID
  */
 export async function getRecipe(id: string): Promise<RecipeWithDetails> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('recipes_with_details')
     .select('*')
@@ -141,9 +215,29 @@ export async function getRecipe(id: string): Promise<RecipeWithDetails> {
 }
 
 /**
- * Delete recipe
+ * Delete recipe (and its image if exists)
  */
 export async function deleteRecipe(id: string): Promise<void> {
+  const supabase = createClient();
+  
+  // Get recipe to check for image
+  const { data: recipe } = await supabase
+    .from('recipes')
+    .select('image_url')
+    .eq('id', id)
+    .single();
+
+  // Delete image if exists
+  if (recipe?.image_url) {
+    try {
+      await deleteRecipeImage(recipe.image_url);
+    } catch (err) {
+      console.error('Failed to delete image:', err);
+      // Continue with recipe deletion even if image deletion fails
+    }
+  }
+
+  // Delete recipe (cascades to ingredients and method_steps)
   const { error } = await supabase
     .from('recipes')
     .delete()
